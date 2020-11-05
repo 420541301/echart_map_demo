@@ -1,25 +1,11 @@
 <template>
   <div>
-    <!-- <div style="height:300px;width:500px;marginLeft:100px">
-      <div>
-        <ul>
-          <li v-for="(item, index) in columns" :key="index" class="a">
-            {{ item.title }}
-          </li>
-        </ul>
-      </div>
-    </div> -->
-    <Tabs :animated="false">
-      <TabPane label="数据一"
-        ><echart-map :interfaceData="interfaceData1"
-      /></TabPane>
-      <TabPane label="数据二"
-        ><echart-map :interfaceData="interfaceData2"
-      /></TabPane>
-      <TabPane label="数据三"
-        ><echart-map :interfaceData="interfaceData3"
-      /></TabPane>
+    <Tabs :animated="false" @on-click="changeData">
+      <TabPane label="数据一" />
+      <TabPane label="数据二" />
+      <TabPane label="数据三" />
     </Tabs>
+    <echart-map ref="echartmap" :interfaceData="data" />
   </div>
 </template>
 
@@ -31,18 +17,13 @@ export default {
   },
   data() {
     return {
-      columns: [
-        { title: "导航一" },
-        { title: "导航二" },
-        { title: "导航三" },
-        { title: "导航四" }
-      ],
+      data: [],
       interfaceData1: [
         { name: "海门", value: 9 },
         { name: "鄂尔多斯", value: 12 },
         { name: "招远", value: 12 },
         { name: "舟山", value: 12 },
-        { name: "齐齐哈尔", value: 14 },
+        { name: "齐齐哈尔市", value: 14 },
         { name: "盐城", value: 15 },
         { name: "赤峰", value: 16 },
         { name: "青岛", value: 18 },
@@ -227,14 +208,14 @@ export default {
         { name: "菏泽", value: 194 },
         { name: "合肥", value: 229 },
         { name: "武汉", value: 273 },
-        { name: "大庆", value: 279 }
+        { name: "大庆市", value: 279 }
       ],
       interfaceData2: [
         { name: "海门", value: 9 },
         { name: "鄂尔多斯", value: 12 },
         { name: "招远", value: 12 },
         { name: "舟山", value: 12 },
-        { name: "齐齐哈尔", value: 14 },
+        { name: "齐齐哈尔市", value: 14 },
         { name: "盐城", value: 15 },
         { name: "赤峰", value: 16 },
         { name: "青岛", value: 18 },
@@ -360,7 +341,7 @@ export default {
         { name: "鄂尔多斯", value: 12 },
         { name: "招远", value: 12 },
         { name: "舟山", value: 12 },
-        { name: "齐齐哈尔", value: 14 },
+        { name: "齐齐哈尔市", value: 14 },
         { name: "盐城", value: 15 },
         { name: "赤峰", value: 16 },
         { name: "青岛", value: 18 },
@@ -396,6 +377,16 @@ export default {
         { name: "贵阳", value: 71 }
       ]
     };
+  },
+  created() {
+    this.data = this.interfaceData1;
+  },
+  methods: {
+    changeData(name) {
+      if (name == 0) this.data = this.interfaceData1;
+      if (name == 1) this.data = this.interfaceData2;
+      if (name == 2) this.data = this.interfaceData3;
+    }
   }
 };
 </script>

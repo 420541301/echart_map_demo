@@ -28,12 +28,13 @@ export default {
       parentId: null,
       parentName: null,
 
+      sourceInterfaceData: [],
       geoCoordMap: {
         海门: [121.15, 31.89],
         鄂尔多斯: [109.781327, 39.608266],
         招远: [120.38, 37.35],
         舟山: [122.207216, 29.985295],
-        齐齐哈尔: [123.97, 47.33],
+        齐齐哈尔市: [123.97, 47.33],
         盐城: [120.13, 33.38],
         赤峰: [118.87, 42.28],
         青岛: [120.33, 36.07],
@@ -218,12 +219,24 @@ export default {
         菏泽: [115.480656, 35.23375],
         合肥: [117.27, 31.86],
         武汉: [114.31, 30.52],
-        大庆: [125.03, 46.58]
+        大庆市: [125.03, 46.58]
       }
     };
   },
+  created() {
+    this.sourceInterfaceData = JSON.parse(JSON.stringify(this.interfaceData));
+  },
   mounted() {
     this.mapChart("myEchart");
+  },
+  watch: {
+    interfaceData: {
+      immediate: true,
+      handler(val) {
+        this.sourceInterfaceData = val;
+        this.mapChart("myEchart");
+      }
+    }
   },
   methods: {
     convertData(data) {
@@ -236,9 +249,68 @@ export default {
       }
       return res;
     },
+    // 获取对应城市的标记点
+    getPoint(data) {
+      let res = [];
+      for (let i = 0; i < data.length; i++) {
+        for (let j = 0; j < this.interfaceData.length; j++) {
+          if (data[i].properties.name == this.interfaceData[j].name) {
+            res.push(this.interfaceData[j]);
+          }
+        }
+      }
+      this.sourceInterfaceData = res;
+    },
+    // 获取对应省/市/县的json文件
+    mapChart(ref) {
+      let _this = this;
+      axios.get("/js/" + this.chinaId + ".json", {}).then(res => {
+        const mapJson = res.data;
+        this.chinaJson = mapJson;
+        this.myEchart = echarts.init(this.$refs[ref]);
+        this.registerAndsetOption(
+          this.myEchart,
+          this.chinaId,
+          this.chinaName,
+          mapJson,
+          false
+        );
+        this.parentId = this.chinaId;
+        this.parentName = "china";
+        this.myEchart.on("click", function(param) {
+          let cityId = cityMap[param.name];
+          if (cityId) {
+            axios.get("/js/" + cityId + ".json", {}).then(res => {
+              const mapJson = res.data;
+              _this.getPoint(mapJson.features);
+              _this.registerAndsetOption(
+                _this.myEchart,
+                cityId,
+                param.name,
+                mapJson,
+                true
+              );
+            });
+          } else {
+            _this.sourceInterfaceData = JSON.parse(
+              JSON.stringify(_this.interfaceData)
+            );
+            _this.registerAndsetOption(
+              _this.myEchart,
+              _this.chinaId,
+              _this.chinaName,
+              mapJson,
+              true
+            );
+          }
+        });
+      });
+    },
+    // 绘制
     registerAndsetOption(myChart, id, name, mapJson, flag) {
       echarts.registerMap(name, mapJson);
       let option = {
+        // 标记点设置
         visualMap: {
           show: true,
           type: "piecewise",
@@ -285,7 +357,7 @@ export default {
         },
         geo: {
           map: name,
-          roam: true,
+          roam: true, // 是否可拖动旋转
           label: {
             normal: {
               show: true,
@@ -314,7 +386,7 @@ export default {
             type: "scatter",
             map: name,
             coordinateSystem: "geo",
-            data: this.convertData(this.interfaceData),
+            data: this.convertData(this.sourceInterfaceData),
             encode: {
               value: 2
             },
@@ -332,46 +404,6 @@ export default {
         ]
       };
       myChart.setOption(option);
-    },
-    mapChart(ref) {
-      let _this = this;
-      axios.get("/js/" + this.chinaId + ".json", {}).then(res => {
-        const mapJson = res.data;
-        this.chinaJson = mapJson;
-        this.myEchart = echarts.init(this.$refs[ref]);
-        this.registerAndsetOption(
-          this.myEchart,
-          this.chinaId,
-          this.chinaName,
-          mapJson,
-          false
-        );
-        this.parentId = this.chinaId;
-        this.parentName = "china";
-        this.myEchart.on("click", function(param) {
-          let cityId = cityMap[param.name];
-          if (cityId) {
-            axios.get("/js/" + cityId + ".json", {}).then(res => {
-              const mapJson = res.data;
-              _this.registerAndsetOption(
-                _this.myEchart,
-                cityId,
-                param.name,
-                mapJson,
-                true
-              );
-            });
-          } else {
-            _this.registerAndsetOption(
-              _this.myEchart,
-              _this.chinaId,
-              _this.chinaName,
-              mapJson,
-              true
-            );
-          }
-        });
-      });
     }
   }
 };
