@@ -1,5 +1,6 @@
 <template>
   <div class="baidumap">
+    <button @click="changeDate">changeData</button>
     <baidu-map
       class="map"
       :center="{ lng: 116.404, lat: 39.915 }"
@@ -28,6 +29,8 @@ export default {
     return {
       BMap: null,
       map: null,
+      dataSet: null,
+      mapvLayer: null,
       interfaceData: [
         { lng: 116.92327630569085, lat: 31.701708606130868, fillStyle: "red" },
         { lng: 115.97697284641086, lat: 29.56170947518192, fillStyle: "yellow" }
@@ -194,6 +197,7 @@ export default {
       }
     };
   },
+  mounted() {},
   methods: {
     handler({ BMap, map }) {
       this.BMap = BMap;
@@ -201,12 +205,25 @@ export default {
       this.drawBoundary(BMap, map);
       this.drawPoint(BMap, map);
     },
+    changeDate() {
+      let mapv = require("mapv");
+      this.interfaceData = [
+        {
+          lng: 116.92327630569085,
+          lat: 31.701708606130868,
+          fillStyle: "green"
+        }
+      ];
+      let data = this.splicingData(this.interfaceData);
+      // 重置数据使用dataSet.set()
+      this.dataSet.set(data);
+    },
+    /*画遮蔽层的相关方法
+     *思路: 首先在中国地图最外画一圈，圈住理论上所有的中国领土，然后再将每个闭合区域合并进来，并全部连到西北角。
+     *      这样就做出了一个经过多次西北角的闭合多边形*/
+    //定义中国东南西北端点，作为第一层
+    //向数组中添加一次闭合多边形，并将西北角再加一次作为之后画闭合区域的起点
     drawBoundary(BMap, map) {
-      /*画遮蔽层的相关方法
-       *思路: 首先在中国地图最外画一圈，圈住理论上所有的中国领土，然后再将每个闭合区域合并进来，并全部连到西北角。
-       *      这样就做出了一个经过多次西北角的闭合多边形*/
-      //定义中国东南西北端点，作为第一层
-      //向数组中添加一次闭合多边形，并将西北角再加一次作为之后画闭合区域的起点
       let pStart = new BMap.Point(180, 90);
       let pEnd = new BMap.Point(0, -90);
       let pArray = [
@@ -488,67 +505,10 @@ export default {
       }); //建立多边形覆盖物
       map.addOverlay(sanjiaoxing);
     },
-    drawPoint(BMap, map) {
-      let mapv = require("mapv");
-      var randomCount = 300;
-      var data = [];
-
-      // 构造数据
-      // 要显示更多数据可以释放 while (randomCount--) 并注释模拟接口数据
-
-      var citys = [
-        "北京",
-        "天津",
-        "上海",
-        "重庆",
-        "石家庄",
-        "太原",
-        "呼和浩特",
-        "哈尔滨",
-        "长春",
-        "沈阳",
-        "济南",
-        "南京",
-        "合肥",
-        "杭州",
-        "南昌",
-        "福州",
-        "郑州",
-        "武汉",
-        "长沙",
-        "广州",
-        "南宁",
-        "西安",
-        "银川",
-        "兰州",
-        "西宁",
-        "乌鲁木齐",
-        "成都",
-        "贵阳",
-        "昆明",
-        "拉萨",
-        "海口"
-      ];
-
-      // while (randomCount--) {
-      //   // 获取城市中心点
-      //   var cityCenter = mapv.utilCityCenter.getCenterByCityName(
-      //     citys[parseInt(Math.random() * citys.length)]
-      //   );
-      //   data.push({
-      //     geometry: {
-      //       type: "Point",
-      //       coordinates: [
-      //         // 坐标
-      //         cityCenter.lng - 2 + Math.random() * 4,
-      //         cityCenter.lat - 2 + Math.random() * 4
-      //       ]
-      //     }
-      //   });
-      // }
-
-      // 模拟接口数据
-      this.interfaceData.forEach(item => {
+    // 组装数据
+    splicingData(sourceData) {
+      let data = [];
+      sourceData.forEach(item => {
         data.push({
           geometry: {
             type: "Point",
@@ -557,10 +517,18 @@ export default {
           fillStyle: item.fillStyle // 标记点颜色
         });
       });
-      var dataSet = new mapv.DataSet(data);
+      return data;
+    },
+    // 画点
+    drawPoint(BMap, map) {
+      let mapv = require("mapv");
+
+      let data = this.splicingData(this.interfaceData);
+      this.dataSet = new mapv.DataSet(data);
 
       var options = {
-        shadowBlur: 30,
+        shadowColor: "rgba(255, 250, 50, 0.5)",
+        shadowBlur: 3,
         globalCompositeOperation: "lighter",
         methods: {
           // 标记点点击事件
@@ -571,8 +539,8 @@ export default {
         size: 5, // 标记点大小
         draw: "simple"
       };
-      var mapvLayer = new mapv.baiduMapLayer(map, dataSet, options);
-      mapvLayer.show(); // 显示图层
+      this.mapvLayer = new mapv.baiduMapLayer(map, this.dataSet, options);
+      this.mapvLayer.show(); // 显示图层
     }
   }
 };

@@ -257,6 +257,7 @@ export default {
       return res;
     },
     // 下钻到市、省时 筛选对应城市的显示数据
+    // 模拟数据只对黑龙江下的齐齐哈尔做了展示
     getPoint(data) {
       let res = [];
       for (let i = 0; i < data.length; i++) {
