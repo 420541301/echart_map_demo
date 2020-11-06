@@ -239,6 +239,13 @@ export default {
     }
   },
   methods: {
+    /*  demo需要
+   返回的模拟数据 { name: "海门", value: 9 },
+   坐标数据geoCoordMap    海门: [121.15, 31.89],
+   显示需要数据 [121.15, 31.89, 9]
+
+   后期只需要接口返回对应城市数据点的数据（坐标[121.15, 31.89]以及表示渲染颜色数据[9]）即[121.15, 31.89, 9]
+    */
     convertData(data) {
       let res = [];
       for (let i = 0; i < data.length; i++) {
@@ -249,7 +256,7 @@ export default {
       }
       return res;
     },
-    // 获取对应城市的标记点
+    // 下钻到市、省时 筛选对应城市的显示数据
     getPoint(data) {
       let res = [];
       for (let i = 0; i < data.length; i++) {
@@ -262,6 +269,7 @@ export default {
       this.sourceInterfaceData = res;
     },
     // 获取对应省/市/县的json文件
+    // vuecli3 需要将文件放到pulic/js下
     mapChart(ref) {
       let _this = this;
       axios.get("/js/" + this.chinaId + ".json", {}).then(res => {
